@@ -3,65 +3,67 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Player_Weapon : MonoBehaviour
-{
-    private bool isWalking = false;
-    private bool isRunning = false;
-    private bool isRun_Attack = false;
-    private bool isWalk_Attack = false;
-    private bool isShooting = false;
+{// Define your boolean parameters
+  Animator animator;
+    int isWalkingHash;
+    int isRunningHash;
 
-    void Update()
+    Rigidbody rigidbody;
+
+        public float rotationSpeed = 180f;
+    // Start is called before the first frame update
+    void Start()
     {
-        // Check for player input
-        float moveSpeed = isRunning ? 2f : 1f; // Adjust the speed for running
+        animator=GetComponent<Animator>();
+        isWalkingHash=Animator.StringToHash("isWalking");
+        isRunningHash=Animator.StringToHash("isRunning");
+        rigidbody=GetComponent<Rigidbody>();
+    }
 
-        float horizontalInput = Input.GetAxis("Horizontal");
-        float verticalInput = Input.GetAxis("Vertical");
+    // Update is called once per frame
+ void FixedUpdate()
+    {
+    bool isRunning = animator.GetBool(isRunningHash);
+        bool isWalking = animator.GetBool(isWalkingHash);
+        bool forwardPress = Input.GetKey(KeyCode.W);
+        bool backwardPress = Input.GetKey(KeyCode.S);
+        bool leftPress = Input.GetKey(KeyCode.A);
+        bool rightPress = Input.GetKey(KeyCode.D);
+        bool runPress = Input.GetKey(KeyCode.LeftShift);
 
-        Vector3 movement = new Vector3(horizontalInput, 0, verticalInput) * moveSpeed * Time.deltaTime;
+        // Set isWalking based on whether the player is pressing any movement keys.
+        animator.SetBool(isWalkingHash, forwardPress || backwardPress || leftPress || rightPress);
 
-        transform.Translate(movement);
+        // Set isRunning based on whether the player is pressing the run key and is also walking.
+        animator.SetBool(isRunningHash, runPress && isWalking);
 
-        if (horizontalInput != 0 || verticalInput != 0)
+        // Rotate the player based on the movement keys that are pressed.
+        if (leftPress)
         {
-            isWalking = true;
+            transform.Rotate(Vector3.down * rotationSpeed * Time.deltaTime);
         }
-        else
+        if (rightPress)
         {
-            isWalking = false;
-        }
-
-        if (isWalking && Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            isRunning = true;
-        }
-        else if (isWalking && Input.GetKeyUp(KeyCode.LeftShift))
-        {
-            isRunning = false;
-        }
-
-        if (isWalking && isShooting)
-        {
-            isWalk_Attack = true;
-        }
-        else
-        {
-            isWalk_Attack = false;
+            transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime);
         }
 
-        if (isWalking && isRunning && Input.GetKeyDown(KeyCode.V))
+        // Move the player based on the movement keys that are pressed.
+        Vector3 movement = Vector3.zero;
+        if (forwardPress)
         {
-            isRun_Attack = true;
+            movement += Vector3.forward;
+        }
+        if (backwardPress)
+        {
+            movement += Vector3.back;
         }
 
-        if (Input.GetKeyDown(KeyCode.Z))
+        if (movement != Vector3.zero)
         {
-            isShooting = true;
-        }
-
-        if (Input.GetKeyUp(KeyCode.Z))
-        {
-            isShooting = false;
+            // Move the player in the direction of movement.
+            float speed = isRunning ? 10f : 5f;
+            rigidbody.MovePosition(transform.position + transform.forward * speed * Time.deltaTime);
         }
     }
+
 }
